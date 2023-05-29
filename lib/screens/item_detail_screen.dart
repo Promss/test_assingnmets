@@ -28,9 +28,9 @@ class ItemDetailScreen extends StatelessWidget {
                 if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
                   return Image.file(snapshot.data as File);
                 } else if (snapshot.hasError) {
-                  return Icon(Icons.error);
+                  return const Icon(Icons.error);
                 } else {
-                  return CircularProgressIndicator();
+                  return const CircularProgressIndicator();
                 }
               },
             ),
