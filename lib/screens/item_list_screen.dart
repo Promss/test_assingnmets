@@ -1,5 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/file.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:provider/provider.dart';
 import 'package:test_assignments/models/item.dart';
 import 'package:test_assignments/providers/item_list_provider.dart';
@@ -101,53 +102,58 @@ class _ItemListScreenState extends State<ItemListScreen> {
         ],
       ),
       body: Consumer<ItemListProvider>(
-        builder: (context, itemListProvider, _) {
-          if (itemListProvider.isLoading) {
-            return const Center(child: CircularProgressIndicator());
-          }
+  builder: (context, itemListProvider, _) {
+    if (itemListProvider.isLoading) {
+      return const Center(child: CircularProgressIndicator());
+    }
 
-          return RefreshIndicator(
-            key: _refreshIndicatorKey,
-            onRefresh: _refreshItems,
-            child: ListView.builder(
-              itemCount: itemListProvider.items.length,
-              itemBuilder: (context, index) {
-                final item = itemListProvider.items[index];
-                return Dismissible(
-                  key: ValueKey(item.id),
-                  direction: DismissDirection.startToEnd,
-                  onDismissed: (_) => _deleteItem(item),
-                  background: Container(
-                    color: Colors.red,
-                    alignment: Alignment.centerLeft,
-                    padding: const EdgeInsets.only(left: 16.0),
-                    child: const Icon(Icons.delete, color: Colors.white),
-                  ),
-                  child: ListTile(
-                    onTap: () {
-                      Navigator.push(
-                        context,
-                        MaterialPageRoute(
-                          builder: (context) => ItemDetailScreen(item: item),
-                        ),
-                      );
-                    },
-                    leading: CachedNetworkImage(
-                      imageUrl: item.imageUrl,
-                      placeholder: (context, url) =>
-                          const CircularProgressIndicator(),
-                      errorWidget: (context, url, error) =>
-                          const Icon(Icons.error),
-                    ),
-                    title: Text(item.title),
-                    subtitle: Text(item.description),
+    return RefreshIndicator(
+      key: _refreshIndicatorKey,
+      onRefresh: _refreshItems,
+      child: ListView.builder(
+        itemCount: itemListProvider.items.length,
+        itemBuilder: (context, index) {
+          final item = itemListProvider.items[index];
+          return Dismissible(
+            key: ValueKey(item.id),
+            direction: DismissDirection.startToEnd,
+            onDismissed: (_) => _deleteItem(item),
+            background: Container(
+              color: Colors.red,
+              alignment: Alignment.centerLeft,
+              padding: const EdgeInsets.only(left: 16.0),
+              child: const Icon(Icons.delete, color: Colors.white),
+            ),
+            child: ListTile(
+              onTap: () {
+                Navigator.push(
+                  context,
+                  MaterialPageRoute(
+                    builder: (context) => ItemDetailScreen(item: item),
                   ),
                 );
               },
+              leading: FutureBuilder(
+                future: DefaultCacheManager().getSingleFile(item.imageUrl),
+                builder: (context, snapshot) {
+                  if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+                    return Image.file(snapshot.data as File);
+                  } else if (snapshot.hasError) {
+                    return Icon(Icons.error);
+                  } else {
+                    return CircularProgressIndicator();
+                  }
+                },
+              ),
+              title: Text(item.title),
+              subtitle: Text(item.description),
             ),
           );
         },
       ),
+    );
+  },
+),
     );
   }
 }

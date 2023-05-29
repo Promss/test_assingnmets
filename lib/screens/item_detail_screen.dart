@@ -1,5 +1,6 @@
-import 'package:cached_network_image/cached_network_image.dart';
 import 'package:flutter/material.dart';
+import 'package:flutter_cache_manager/file.dart';
+import 'package:flutter_cache_manager/flutter_cache_manager.dart';
 import 'package:test_assignments/models/item.dart';
 
 class ItemDetailScreen extends StatelessWidget {
@@ -21,10 +22,17 @@ class ItemDetailScreen extends StatelessWidget {
             const SizedBox(height: 16.0),
             Text(item.description, style: const TextStyle(fontSize: 18.0)),
             const SizedBox(height: 16.0),
-            CachedNetworkImage(
-              imageUrl: item.imageUrl,
-              placeholder: (context, url) => const CircularProgressIndicator(),
-              errorWidget: (context, url, error) => const Icon(Icons.error),
+            FutureBuilder(
+              future: DefaultCacheManager().getSingleFile(item.imageUrl),
+              builder: (context, snapshot) {
+                if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
+                  return Image.file(snapshot.data as File);
+                } else if (snapshot.hasError) {
+                  return Icon(Icons.error);
+                } else {
+                  return CircularProgressIndicator();
+                }
+              },
             ),
           ],
         ),
