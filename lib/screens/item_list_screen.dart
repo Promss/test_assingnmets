@@ -6,7 +6,6 @@ import 'package:test_assignments/models/item.dart';
 import 'package:test_assignments/providers/item_list_provider.dart';
 import 'package:test_assignments/screens/item_detail_screen.dart';
 
-
 class ItemListScreen extends StatefulWidget {
   const ItemListScreen({super.key});
 
@@ -44,7 +43,7 @@ class _ItemListScreenState extends State<ItemListScreen> {
       title: _titleController.text,
       description: _descriptionController.text,
       imageUrl:
-          'https://via.placeholder.com/150', // Replace with your image URL field
+          'https://via.placeholder.com/150',
     );
     await itemListProvider.addItem(newItem);
     _titleController.clear();
@@ -102,58 +101,60 @@ class _ItemListScreenState extends State<ItemListScreen> {
         ],
       ),
       body: Consumer<ItemListProvider>(
-  builder: (context, itemListProvider, _) {
-    if (itemListProvider.isLoading) {
-      return const Center(child: CircularProgressIndicator());
-    }
+        builder: (context, itemListProvider, _) {
+          if (itemListProvider.isLoading) {
+            return const Center(child: CircularProgressIndicator());
+          }
 
-    return RefreshIndicator(
-      key: _refreshIndicatorKey,
-      onRefresh: _refreshItems,
-      child: ListView.builder(
-        itemCount: itemListProvider.items.length,
-        itemBuilder: (context, index) {
-          final item = itemListProvider.items[index];
-          return Dismissible(
-            key: ValueKey(item.id),
-            direction: DismissDirection.startToEnd,
-            onDismissed: (_) => _deleteItem(item),
-            background: Container(
-              color: Colors.red,
-              alignment: Alignment.centerLeft,
-              padding: const EdgeInsets.only(left: 16.0),
-              child: const Icon(Icons.delete, color: Colors.white),
-            ),
-            child: ListTile(
-              onTap: () {
-                Navigator.push(
-                  context,
-                  MaterialPageRoute(
-                    builder: (context) => ItemDetailScreen(item: item),
+          return RefreshIndicator(
+            key: _refreshIndicatorKey,
+            onRefresh: _refreshItems,
+            child: ListView.builder(
+              itemCount: itemListProvider.items.length,
+              itemBuilder: (context, index) {
+                final item = itemListProvider.items[index];
+                return Dismissible(
+                  key: ValueKey(item.id),
+                  direction: DismissDirection.startToEnd,
+                  onDismissed: (_) => _deleteItem(item),
+                  background: Container(
+                    color: Colors.red,
+                    alignment: Alignment.centerLeft,
+                    padding: const EdgeInsets.only(left: 16.0),
+                    child: const Icon(Icons.delete, color: Colors.white),
+                  ),
+                  child: ListTile(
+                    onTap: () {
+                      Navigator.push(
+                        context,
+                        MaterialPageRoute(
+                          builder: (context) => ItemDetailScreen(item: item),
+                        ),
+                      );
+                    },
+                    leading: FutureBuilder(
+                      future:
+                          DefaultCacheManager().getSingleFile(item.imageUrl),
+                      builder: (context, snapshot) {
+                        if (snapshot.connectionState == ConnectionState.done &&
+                            snapshot.hasData) {
+                          return Image.file(snapshot.data as File);
+                        } else if (snapshot.hasError) {
+                          return const Icon(Icons.error);
+                        } else {
+                          return const CircularProgressIndicator();
+                        }
+                      },
+                    ),
+                    title: Text(item.title),
+                    subtitle: Text(item.description),
                   ),
                 );
               },
-              leading: FutureBuilder(
-                future: DefaultCacheManager().getSingleFile(item.imageUrl),
-                builder: (context, snapshot) {
-                  if (snapshot.connectionState == ConnectionState.done && snapshot.hasData) {
-                    return Image.file(snapshot.data as File);
-                  } else if (snapshot.hasError) {
-                    return const Icon(Icons.error);
-                  } else {
-                    return const CircularProgressIndicator();
-                  }
-                },
-              ),
-              title: Text(item.title),
-              subtitle: Text(item.description),
             ),
           );
         },
       ),
-    );
-  },
-),
     );
   }
 }
